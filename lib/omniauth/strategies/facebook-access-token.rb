@@ -79,10 +79,6 @@ module OmniAuth
       end
 
       def callback_phase
-        if !request.params['access_token'] || request.params['access_token'].to_s.empty?
-          raise ArgumentError.new("No access token provided.")
-        end
-
         self.access_token = build_access_token
         self.access_token = self.access_token.refresh! if self.access_token.expired?
 
@@ -114,7 +110,23 @@ module OmniAuth
 
       def build_access_token
         # Options supported by `::OAuth2::AccessToken#initialize` and not overridden by `access_token_options`
-        hash = request.params.slice("access_token", "expires_at", "expires_in", "refresh_token")
+
+        begin
+          params = case request.content_type
+          when 'application/json'
+            JSON.parse(request.body.read)
+          when 'application/msgpack'
+            MessagePack.unpack(request.body.read)
+          end
+        rescue => _
+          params = request.params
+        end
+
+        if !params['access_token'] || params['access_token'].to_s.empty?
+          raise ArgumentError.new("No access token provided.")
+        end
+
+        hash = params.slice("access_token", "expires_at", "expires_in", "refresh_token")
         hash.update(options.access_token_options)
         ::OAuth2::AccessToken.from_hash(
           client,
