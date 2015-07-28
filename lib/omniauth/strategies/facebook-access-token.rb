@@ -64,7 +64,10 @@ module OmniAuth
       end
 
       def info_options
-        options[:info_fields] ? {:params => {:fields => options[:info_fields]}} : {}
+        params = options[:info_fields] ? {fields: options[:info_fields]} : {}
+        params[:appsecret_proof] = appsecret_proof
+
+        {params: params}
       end
 
       def client
@@ -153,6 +156,10 @@ module OmniAuth
         url.query = Rack::Utils.build_query(query) if query
 
         url.to_s
+      end
+
+      def appsecret_proof
+        OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha256'), options.client_secret, access_token.token)
       end
     end
   end
