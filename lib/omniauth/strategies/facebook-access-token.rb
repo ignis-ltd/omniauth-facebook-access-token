@@ -115,7 +115,7 @@ module OmniAuth
         # Options supported by `::OAuth2::AccessToken#initialize` and not overridden by `access_token_options`
 
         begin
-          params = case request.content_type
+          params = case request.media_type
           when 'application/json'
             JSON.parse(request.body.read)
           when 'application/msgpack'
