@@ -123,6 +123,8 @@ module OmniAuth
           end
         rescue => _
           params = request.params
+        ensure
+          request.body.rewind if request.body.respond_to?(:rewind)
         end
 
         if !params['access_token'] || params['access_token'].to_s.empty?
